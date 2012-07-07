@@ -1,0 +1,19 @@
+{
+  "author": "tom",
+  "name": "silly_builder",
+  "version": "0.0.0",
+  "bin":{"sb":"./lib/cli.js"},
+  "main":"./lib/index.js",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/WeweTom/js.git"
+  },
+  "engines": {
+    "node": "~0.6.11"
+  },
+  "dependencies": {
+    "uglify-js": ">= 1.0.7"
+  },
+  "devDependencies": {},
+  "optionalDependencies": {}
+}
