@@ -1,3 +1,3 @@
-KISSY.add('mods/e',function(){
+KISSY.add(function(){
   return 'e';
 });

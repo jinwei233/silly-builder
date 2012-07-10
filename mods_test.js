@@ -1,4 +1,4 @@
-KISSY.add('mods/a',function(){
+KISSY.add(function(){
   return 'A';
-},{requires:['./mods/b.js','./mods/c.js']});
+},{requires:['./mods/b','./mods/c']});
 
