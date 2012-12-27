@@ -1,0 +1,29 @@
+<!doctype html>
+<html>
+  <head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=Edge">
+	<title>模块组织测试</title>
+  </head>
+  <body>
+	
+	<script charset="utf-8" src="http://a.tbcdn.cn/s/kissy/1.2.0/kissy-min.js"></script>
+	<script type="text/javascript">
+	  (function(){
+
+		KISSY.config({
+		  packages:[{
+			name:'silly_app',
+	        path:'../'
+		  }]
+		});
+
+	    KISSY.use('silly_app/mods_test',function(A){
+	      console.log(A);
+	    });
+	  })();
+	</script>
+  </body>
+</html>
+
+

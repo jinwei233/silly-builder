@@ -1,25 +1,32 @@
 var fs = require('fs'),
     path = require('path');
-
 var jsp = require("uglify-js").parser;
 var pro = require("uglify-js").uglify;
 var reader = {
-  init:function(filename,cfg){
-    //依赖关系数据，便于找出循环依赖
-    this.requires = {};
+  init:function(filename){
+
+    var p = process.cwd();
+
+    try{
+      this.packagebase = require(p+'/build.js').packagebase;
+    }catch(e){
+      throw('未找到build.js文件');
+    }
+
+    this.packagebase = fs.realpathSync(this.packagebase);
+    this.packageName = this.packagebase.split('/').pop();
+
+    // console.log(this.packageName);
+    // console.log(this.packagebase);
+    // return;
+    //console.log('Name:',this.packageName);
+
+    this.requires = {};//依赖关系，便于找出循环依赖
     this.queue = [];//依赖遍历路径
     this.counter = 1;
-    var p = process.cwd()
-      ,fullpath = path.resolve(p,filename)
-      ,basedir = path.dirname(fullpath)
-
-    this.basedir = basedir;
-
-    this.setAppAndProjectPath(p);
-    // console.log('this.apppath='+this.apppath);
-    // console.log('this.projectpath='+this.projectpath);
 
     this.getDep(filename,p);
+
   },
   getDeps:function(a,parent,cb){
     var self = this;
@@ -30,7 +37,7 @@ var reader = {
   getDep:function(mod,parent,cb){
     arguments.callee.n = arguments.callee.n || 0;
     if(arguments.callee.n>1000){
-      console.log('recursive more than 1000 times');
+      console.log('recursive more than 30 times');
       return;
     }
     arguments.callee.n++;
@@ -41,17 +48,17 @@ var reader = {
 
     this.queue.push(p);
 
-    self.requires[p] || (self.requires[p] = {});
+    var reqs = this.requires[p] = this.requires[p] || {};
 
     cb && cb(p);
 
     this.parse(p,function(mod){
       if(mod){
-        if(!self.requires[mod]){
-          self.requires[mod] = {};
-          self.requires[mod].parent = p;
-          self.checkCyclic(mod);
-        }
+        self.requires[mod] = self.requires[mod] || {};
+        self.requires[mod].parent = p;
+        // console.log('check:',p);
+        // console.log(mod);
+        self.checkCyclic(mod);
       }
     });
   },
@@ -68,15 +75,27 @@ var reader = {
 
     this.data = '';
     p = this.fixExtension(p);
-    //console.log('p='+p);
+
     fs.exists(p,function(b){
       if(b){
+        /*
+        var stream = fs.createReadStream(p);
+        stream.on('data',function(data){
+          //这种方式潜在乱码风险：参见朴灵2012.07D2F分享
+          self.data+=data.toString();
+        });
+        stream.on('end',function(){
+          self._onEnd(parent,cb);
+          self.data = '';
+        });
+        */
         fs.readFile(p,function(err,data){
           if(err) throw err;
           self.data = data.toString();
           self._onEnd(parent,cb);
           self.data = "";
         });
+
       }else{
         console.log('path '+p+' does not exists!');
       }
@@ -86,41 +105,69 @@ var reader = {
     var modsRe = /requires:\[(.*?)\]/,
         r = modsRe.exec(this.clearBlankStr(this.data));
     this.counter--;
+    //console.log(this.counter);
     if(r && r.length>1){
       var ret = r[1].replace(/\'/g,'').replace(/\"/g,'');
       var deps = ret.split(',');
-      deps = this.filterMods(deps,parent);
+      //console.log(deps);
+      deps = this.filterMods(deps);
       deps = this.fixpath(deps);
+      //console.log(deps);
+
       this.counter += deps.length;
       this.getDeps(deps,parent,cb);
     }
+
     if(this.counter <= 0){
+      //console.log(this.queue);
+      this.dump();
       this.tranverseDepsEnd();
     }
   },
-  //返回非app之外的js、非css文件
-  filterMods:function(mods,basepath){
-    var self = this
-      ,fixedpath
-      ,b
+  _onEndBak:function(parent,cb){
+    var modsRe = /requires:(\[.*?\])/,
+        r = modsRe.exec(this.clearBlankStr(this.data));
+    this.counter--;
+    //console.log(this.counter);
+    if(r && r.length>1){
+      var deps = eval(r[1]);
+      //console.log(deps);
+      deps = this.filterMods(deps);
+      deps = this.fixpath(deps);
+      //console.log(deps);
+
+      this.counter += deps.length;
+      this.getDeps(deps,parent,cb);
+    }
+
+    if(this.counter <= 0){
+      //console.log(this.queue);
+      this.dump();
+      this.tranverseDepsEnd();
+    }
+  },
+  filterMods:function(mods){
+    var self = this;
     return mods.filter(function(mod){
-             fixedpath = path.resolve(basepath,mod);
-             b = self.pathcontains(fixedpath,self.apppath);
-             return !/\.css$/.test(mod) && /^\./.test(mod) && b;
+             return !/\.css$/.test(mod) && /^\.\//.test(mod);
            });
   },
-  //循环检测:感觉已经不太必要的，kissy内部肯定做了循环检测
   checkCyclic:function(m){
     var p = this.requires[m].parent,
         pa = this.requires[m].parent;
+
     while(pa){
+      // for(var x in this.requires[m]){
+      //   if(x !== 'parent'){
+      //     this.requires[pa][x] = x;
+      //   }
+      // }
       if(m == pa){
         throw Error('cyclic error 发现循环依赖');
       }
       pa = this.requires[pa].parent;
     }
   },
-  //将包名fix为真实的路径名
   fixpath:function(deps){
     var re = /\.js$/,
         ret = [];
@@ -136,10 +183,17 @@ var reader = {
   clearBlankStr:function(s){
     return s.replace(/\s/g,'');
   },
+  dump:function(){
+    //console.log(this.queue);
+  },
   //依赖迭代完成
   tranverseDepsEnd:function(){
+    //console.log(this.queue);
+
     var deps = this.uniqueArray(this.queue),
         self = this;
+    // console.log('before unique:');
+    // console.log(this.queue);
     deps = deps.reverse();
     console.log('after unique:');
     console.log(deps);
@@ -164,78 +218,14 @@ var reader = {
         ascii_only:true//只输出asc
       }); // compressed code here
 
+      //var min_code = comboFileContent;
+
       fs.writeFile(fnamemin,min_code,function(err){
         if(err) throw err;
         console.log('save mini file '+fnamemin+' done' );
       });
 
     });
-  },
-  //设置app.json project.json的位置
-  setAppAndProjectPath:function(dirname){
-    var dirs = dirname.split("/")
-      ,dir
-      ,fullpath
-      ,projectfullpath
-      ,APPPATH
-      ,PROPATH
-      ,APPJSON = '/app.json'
-      ,PROJSON = '/project.json'
-      ,APPNAME
-      ,PRJNAME
-      ,exists
-      ,appflag
-      ,projectflag
-      ,popeddir
-
-    while(dirs.length){
-      dir = dirs.join('/')
-      popeddir = dirs.pop();
-      fullpath = dir+APPJSON;
-      projectfullpath = dir+PROJSON;
-      exists = fs.existsSync(fullpath)
-      if(exists){
-        appflag = true;
-        APPPATH = dir;
-        APPNAME = popeddir;
-      }
-      exists = fs.existsSync(projectfullpath)
-      if(exists){
-        projectflag = true;
-        PROPATH = dir;
-        PRJNAME = popeddir;
-      }
-      if(projectflag && appflag){
-        break;
-      }
-    }
-    if(appflag){
-      this.apppath = APPPATH;
-      this.appname = APPNAME;
-    }else{
-      this.apppath = this.basedir;
-      var arr = this.basedir.split('/');
-      if(arr.length){
-        this.appname = arr.pop();
-      }else{
-        this.appname = this.basedir;
-      }
-    }
-
-    if(projectflag){
-      this.projectpath = PROPATH;
-      this.projectname = PRJNAME;
-    }
-    if(!projectflag){
-      this.projectpath = this.apppath;
-      this.projectname = this.appname;
-    }
-  },
-  //test if path A contains B
-  pathcontains:function(A,B){
-    A = path.resolve(A);
-    B = path.resolve(B);
-    return A.indexOf(B) === 0;
   },
   uniqueArray:function uniqueArray(arr) {
     var ret = [ ], temp = { }, elt;
@@ -260,7 +250,6 @@ var reader = {
     var comboArr = [],
         self = this,
         counter = pathArr.length,
-        //TODO:add build time stamp
         combofiles = '/**\n *gen by sb\n *combo files:\n\n'+pathArr.join('\n')+'\n\n*/\n';
 
     pathArr.forEach(function(p,k){
@@ -280,7 +269,17 @@ var reader = {
           len = slicer.length,
           i = s.indexOf(slicer);
       if(s.slice(i+len,i+len+8) == 'function'){
-        var modname = p.replace(this.projectpath,this.projectname).replace(/\.js$/,'');
+        var modname = p.replace(this.packagebase,this.packageName).replace(/\.js$/,'');
+        s = s.slice(0,i+5)+'"'+modname+'",'+s.slice(i+5);
+      }
+      return s;
+    },
+  fixModName2:function(s,p){
+      var slicer = '.add(',
+          len = slicer.length,
+          i = s.indexOf(slicer);
+      if(s.slice(i+len,i+len+8) == 'function'){
+        var modname = p.replace(this.packagebase,this.packageName).replace(/\.js$/,'');
         s = s.slice(0,i+5)+'"'+modname+'",'+s.slice(i+5);
       }
       return s;
