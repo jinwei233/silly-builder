@@ -2,14 +2,24 @@
  *gen by sb
  *combo files:
 
-/var/www/f/dropbox/gits/silly_builder/silly_prject/one/mods/modc.js
-/var/www/f/dropbox/gits/silly_builder/silly_prject/one/mods/modb.js
-/var/www/f/dropbox/gits/silly_builder/silly_prject/one/mods/moda.js
-/var/www/f/dropbox/gits/silly_builder/silly_prject/one/index.js
+/home/tom/Dropbox/gits/silly_builder/silly_prject/three/mods/modc.js
+/home/tom/Dropbox/gits/silly_builder/silly_prject/one/mods/modc.js
+/home/tom/Dropbox/gits/silly_builder/silly_prject/two/mods/modc.js
+/home/tom/Dropbox/gits/silly_builder/silly_prject/one/mods/modb.js
+/home/tom/Dropbox/gits/silly_builder/silly_prject/one/mods/moda.js
+/home/tom/Dropbox/gits/silly_builder/silly_prject/one/index.js
 
 */
-KISSY.add("silly_prject/one/mods/modc",function(){
+KISSY.add("silly_prject/three/mods/modc",function(){
 
+});
+;KISSY.add("silly_prject/one/mods/modc",function(){
+
+});
+;KISSY.add("silly_prject/two/mods/modc",function(){
+
+},{
+  requires:['../../three/mods/modc']
 });
 ;KISSY.add("silly_prject/one/mods/modb",function(){
 

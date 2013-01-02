@@ -1,2 +1,10 @@
-
+{
+"build":[{
+	"src":"main.js",
+	"des":"v1/main.js"
+     },{
+	"src":"index.js",
+	"des":"../two_v2/main.js"
+     }]
+}
 

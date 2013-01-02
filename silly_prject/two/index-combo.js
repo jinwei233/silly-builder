@@ -2,30 +2,26 @@
  *gen by sb
  *combo files:
 
-/var/www/f/dropbox/gits/silly_builder/silly_prject/three/mods/modc.js
-/var/www/f/dropbox/gits/silly_builder/silly_prject/two/mods/modc.js
-/var/www/f/dropbox/gits/silly_builder/silly_prject/two/mods/modb.js
-/var/www/f/dropbox/gits/silly_builder/silly_prject/two/mods/moda.js
-/var/www/f/dropbox/gits/silly_builder/silly_prject/two/index.js
+/home/tom/Dropbox/gits/silly_builder/silly_prject/two/mods/modc.js
+/home/tom/Dropbox/gits/silly_builder/silly_prject/two/mods/modb.js
+/home/tom/Dropbox/gits/silly_builder/silly_prject/two/mods/moda.js
+/home/tom/Dropbox/gits/silly_builder/silly_prject/two/index.js
 
 */
-KISSY.add("silly_prject/three/mods/modc",function(){
-
-});
-;KISSY.add("silly_prject/two/mods/modc",function(){
+KISSY.add("silly_prject/two/mods/modc.js",function(){
 
 },{
   requires:['../../three/mods/modc']
 });
-;KISSY.add("silly_prject/two/mods/modb",function(){
+;KISSY.add("silly_prject/two/mods/modb.js",function(){
 
 });
-;KISSY.add("silly_prject/two/mods/moda",function(){
+;KISSY.add("silly_prject/two/mods/moda.js",function(){
 
 },{
   requires:['./modc']
 });
-;KISSY.add("silly_prject/two/index",function(){
+;KISSY.add("silly_prject/two/index.js",function(){
   
 },{
   requires:['./mods/moda','./mods/modb']

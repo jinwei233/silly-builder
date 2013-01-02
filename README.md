@@ -36,3 +36,15 @@ todo
 ----
 * 支持生成时间戳文件夹
 * 模块化供第三方调用
+
+
+update
+------
+添加强制combo
+project 和 app 机制:支持project级别和app级别打包
+project配置包名
+copy文件支持
+
+KISSY的目录结构模型
+-------------------
+
