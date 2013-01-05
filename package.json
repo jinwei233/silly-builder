@@ -1,7 +1,7 @@
 {
   "author": "cookieu@gmail.com",
   "name": "silly_builder",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "bin":{"sb":"./lib/cli.js"},
   "main":"./lib/index.js",
   "repository": {
