@@ -1,8 +1,10 @@
+UPDATE
+------
+使用升级版的包含更多功能的silly builder https://github.com/WeweTom/silly
+
 安装
 ----
-    git clone xxx
-    npm install -g
-
+    npm install silly_builder -g
 测试
 ------
     
